@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickDesk Pro — Worldwide Remote Control</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #07090f;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 0.4rem 1.2rem;
+      border-radius: 100px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #38bdf8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 8vw, 6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #e2e8f0 0%, #38bdf8 50%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.2rem;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: #4a5e78;
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: #000;
+      box-shadow: 0 4px 25px rgba(56, 189, 248, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 40px rgba(56, 189, 248, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.12);
+      transform: translateY(-3px);
+    }
+
+    .btn-github {
+      background: rgba(255,255,255,0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+    }
+    .btn-github:hover {
+      background: rgba(255,255,255,0.15);
+      transform: translateY(-3px);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: #4a5e78;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      animation: float 2s ease-in-out infinite;
+    }
+    .scroll-indicator span {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, #4a5e78, transparent);
+    }
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-8px); }
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 6rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 0.6rem;
+      background: linear-gradient(135deg, #e2e8f0, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section-sub {
+      text-align: center;
+      color: #4a5e78;
+      font-size: 1.05rem;
+      margin-bottom: 3.5rem;
+    }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: rgba(14, 20, 32, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(26, 40, 64, 0.5);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent, #38bdf8), transparent);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(20, 29, 46, 0.8);
+    }
+
+    .feature-icon {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .feature-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .feature-card p {
+      font-size: 0.9rem;
+      color: #4a5e78;
+      line-height: 1.5;
+    }
+
+    /* HOW IT WORKS */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      counter-reset: step;
+    }
+    .step {
+      background: rgba(14, 20, 32, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(26, 40, 64, 0.5);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    .step:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+    .step-num {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15));
+      border: 1px solid rgba(56,189,248,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #38bdf8;
+      margin: 0 auto 1rem;
+    }
+    .step h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .step p {
+      font-size: 0.85rem;
+      color: #4a5e78;
+      line-height: 1.5;
+    }
+
+    /* DOWNLOAD */
+    .download-section {
+      text-align: center;
+      background: rgba(14, 20, 32, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(26, 40, 64, 0.5);
+      border-radius: 24px;
+      padding: 4rem 2rem;
+      margin: 3rem auto;
+    }
+    .download-section h2 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+    }
+    .download-section > p {
+      color: #4a5e78;
+      margin-bottom: 2.5rem;
+    }
+    .download-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-download {
+      background: linear-gradient(135deg, #22d3a5, #10b981);
+      color: #000;
+      box-shadow: 0 4px 25px rgba(34, 211, 165, 0.3);
+      font-size: 1.1rem;
+      padding: 1rem 2.5rem;
+    }
+    .btn-download:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 40px rgba(34, 211, 165, 0.5);
+    }
+    .btn-zip {
+      background: rgba(255,255,255,0.06);
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+    }
+    .btn-zip:hover {
+      background: rgba(255,255,255,0.12);
+      transform: translateY(-3px);
+    }
+    .dl-info {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: #4a5e78;
+    }
+    .dl-info code {
+      background: rgba(255,255,255,0.06);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+    .stat {
+      text-align: center;
+      background: rgba(14, 20, 32, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(26, 40, 64, 0.3);
+      border-radius: 16px;
+      padding: 1.8rem;
+    }
+    .stat-num {
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #38bdf8, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: #4a5e78;
+      margin-top: 0.3rem;
+    }
+
+    /* TECH SPECS */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .spec {
+      background: rgba(14, 20, 32, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(26, 40, 64, 0.3);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .spec-label {
+      color: #4a5e78;
+      font-size: 0.85rem;
+    }
+    .spec-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(26, 40, 64, 0.3);
+      margin-top: 2rem;
+    }
+    footer p {
+      color: #4a5e78;
+      font-size: 0.85rem;
+    }
+    footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* UTILITIES */
+    .glow-text {
+      color: #38bdf8;
+    }
+    .mt-2 { margin-top: 2rem; }
+
+    @media (max-width: 600px) {
+      section { padding: 4rem 1.2rem; }
+      .hero-buttons { flex-direction: column; align-items: center; }
+      .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div class="content">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">⚡ v4.0 — Now with Worldwide Tunnel</div>
+    <h1>QuickDesk<br>Pro</h1>
+    <p>Full remote desktop with screen sharing, mouse &amp; keyboard control, file transfer, and chat. Works worldwide with zero configuration.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn btn-primary">⬇ Download Now</a>
+      <a href="https://github.com/mystry112000/quickdesk-pro" target="_blank" class="btn btn-github">View on GitHub</a>
+      <a href="#features" class="btn btn-secondary">Explore Features</a>
+    </div>
+    <div class="scroll-indicator">
+      Scroll<div><span></span></div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-sub">A complete remote desktop — no account, no browser, no monthly fees.</p>
+    <div class="features-grid">
+      <div class="feature-card" style="--accent:#38bdf8">
+        <span class="feature-icon">🌐</span>
+        <h3>Worldwide Access</h3>
+        <p>Built-in Cloudflare tunnel connects across countries — no port forwarding, no router config. Free &amp; no account needed.</p>
+      </div>
+      <div class="feature-card" style="--accent:#22d3a5">
+        <span class="feature-icon">📺</span>
+        <h3>Screen Sharing</h3>
+        <p>Real-time screen capture at 5-30 FPS with adjustable quality. Multi-monitor supported. Binary WebSocket frames for minimal latency.</p>
+      </div>
+      <div class="feature-card" style="--accent:#a78bfa">
+        <span class="feature-icon">🖱️</span>
+        <h3>Full Remote Control</h3>
+        <p>Mouse move, click, drag, scroll — plus full keyboard with every modifier. Ctrl+C, Alt+Tab, Win+D — all work remotely.</p>
+      </div>
+      <div class="feature-card" style="--accent:#fbbf24">
+        <span class="feature-icon">🔒</span>
+        <h3>PIN Protected</h3>
+        <p>Every session generates a random 6-character PIN. Without it, no one can connect — even if they find your tunnel address.</p>
+      </div>
+      <div class="feature-card" style="--accent:#f87171">
+        <span class="feature-icon">💬</span>
+        <h3>Built-in Chat</h3>
+        <p>Text chat alongside your remote session. No need to switch apps — type and send right from the remote control window.</p>
+      </div>
+      <div class="feature-card" style="--accent:#22d3a5">
+        <span class="feature-icon">📁</span>
+        <h3>File Transfer</h3>
+        <p>Send files directly to the remote computer. Chunked over the same encrypted WebSocket with progress tracking.</p>
+      </div>
+      <div class="feature-card" style="--accent:#38bdf8">
+        <span class="feature-icon">⚡</span>
+        <h3>Real-time Performance</h3>
+        <p>Adaptive frame skipping prevents backlog. Binary JPEG frames with zero base64 overhead. Always shows the latest frame.</p>
+      </div>
+      <div class="feature-card" style="--accent:#fbbf24">
+        <span class="feature-icon">🛡️</span>
+        <h3>Emergency Kill</h3>
+        <p>Press Ctrl+Alt+Q three times rapidly to instantly disconnect. pyautogui FAILSAFE enabled — mouse to screen corner also aborts.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Two clicks to connect. No signup, no terminal, no config.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Host Starts Sharing</h3>
+        <p>Opens QuickDesk → Share My Screen → Start. Gets a local address + a random PIN.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Enable Worldwide Tunnel</h3>
+        <p>Clicks Enable Tunnel — Cloudflare generates a public address like abc.trycloudflare.com. Works everywhere.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Share Address + PIN</h3>
+        <p>Sends the address and 6-char PIN via WhatsApp, Telegram, or any chat app.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Viewer Connects</h3>
+        <p>Pastes address + PIN → Connect. Sees the remote screen with full control.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download">
+    <div class="download-section">
+      <h2>⬇ Download QuickDesk Pro</h2>
+      <p>One file. No dependencies to install manually — the batch script handles everything.</p>
+      <div class="download-buttons">
+        <a href="https://github.com/mystry112000/quickdesk-pro/archive/refs/heads/main.zip" class="btn btn-download">
+          ⬇ Download ZIP
+        </a>
+        <a href="https://github.com/mystry112000/quickdesk-pro" target="_blank" class="btn btn-zip">
+          View Source on GitHub
+        </a>
+      </div>
+      <div class="dl-info">
+        Or clone: <code>git clone https://github.com/mystry112000/quickdesk-pro.git</code>
+      </div>
+      <div class="dl-info">
+        Then double-click <code>START.bat</code> — it auto-installs Python + packages.
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">1</div>
+        <div class="stat-label">Single File</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Dependencies</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">5-30</div>
+        <div class="stat-label">Adjustable FPS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Zero</div>
+        <div class="stat-label">Account Required</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH SPECS -->
+  <section>
+    <h2 class="section-title">Technical Specs</h2>
+    <p class="section-sub">Built with Python, powered by open-source.</p>
+    <div class="specs-grid">
+      <div class="spec"><span class="spec-label">Language</span><span class="spec-value">Python 3.8+</span></div>
+      <div class="spec"><span class="spec-label">Transport</span><span class="spec-value">WebSocket (wss://)</span></div>
+      <div class="spec"><span class="spec-label">Screen Capture</span><span class="spec-value">mss (10ms grab)</span></div>
+      <div class="spec"><span class="spec-label">Input Control</span><span class="spec-value">pyautogui</span></div>
+      <div class="spec"><span class="spec-label">Tunnel</span><span class="spec-value">Cloudflare (free)</span></div>
+      <div class="spec"><span class="spec-label">Frames</span><span class="spec-value">Binary JPEG</span></div>
+      <div class="spec"><span class="spec-label">Auth</span><span class="spec-value">6-char PIN</span></div>
+      <div class="spec"><span class="spec-value" style="color:#22d3a5">• No browser needed</span></div>
+      <div class="spec"><span class="spec-value" style="color:#22d3a5">• No ngrok account</span></div>
+      <div class="spec"><span class="spec-value" style="color:#22d3a5">• No port forwarding</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>QuickDesk Pro — Open source remote desktop. Built with ❤️ using Python, WebSocket, and Cloudflare.</p>
+    <p style="margin-top:0.5rem;"><a href="https://github.com/mystry112000/quickdesk-pro">GitHub</a></p>
+  </footer>
+
+</div>
+
+<script>
+  // ── THREE.JS 3D BACKGROUND ──────────────────────────────
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Particles
+  const particlesGeo = new THREE.BufferGeometry();
+  const count = 2500;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+
+  for (let i = 0; i < count; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 40;
+    positions[i*3+1] = (Math.random() - 0.5) * 40;
+    positions[i*3+2] = (Math.random() - 0.5) * 30 - 5;
+
+    const c = new THREE.Color();
+    c.setHSL(0.56 + Math.random() * 0.15, 0.6, 0.4 + Math.random() * 0.3);
+    colors[i*3] = c.r;
+    colors[i*3+1] = c.g;
+    colors[i*3+2] = c.b;
+
+    sizes[i] = 0.02 + Math.random() * 0.06;
+  }
+
+  particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particlesGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  particlesGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+  const particleMat = new THREE.PointsMaterial({
+    size: 0.08,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
+  });
+
+  const particleSystem = new THREE.Points(particlesGeo, particleMat);
+  scene.add(particleSystem);
+
+  // Center connecting lines
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0x1a2840,
+    transparent: true,
+    opacity: 0.15,
+  });
+
+  const linesGroup = new THREE.Group();
+  const pos = particleSystem.geometry.attributes.position.array;
+  const lineCount = 80;
+  const points = [];
+  for (let i = 0; i < lineCount; i++) {
+    const idx = Math.floor(Math.random() * count);
+    const idx2 = Math.floor(Math.random() * count);
+    const p1 = new THREE.Vector3(pos[idx*3], pos[idx*3+1], pos[idx*3+2]);
+    const p2 = new THREE.Vector3(pos[idx2*3], pos[idx2*3+1], pos[idx2*3+2]);
+    if (p1.distanceTo(p2) < 10) {
+      const geo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+      const line = new THREE.Line(geo, lineMat);
+      linesGroup.add(line);
+    }
+  }
+  scene.add(linesGroup);
+
+  // Torus
+  const torusGeo = new THREE.TorusGeometry(3, 0.04, 16, 60);
+  const torusMat = new THREE.MeshBasicMaterial({
+    color: 0x1a2840,
+    transparent: true,
+    opacity: 0.3,
+    wireframe: true,
+  });
+  const torus = new THREE.Mesh(torusGeo, torusMat);
+  torus.position.set(0, 0, -2);
+  torus.rotation.x = Math.PI / 3;
+  scene.add(torus);
+
+  // Small floating shapes
+  const shapesGroup = new THREE.Group();
+  for (let i = 0; i < 12; i++) {
+    const size = 0.02 + Math.random() * 0.06;
+    const shape = new THREE.Mesh(
+      new THREE.OctahedronGeometry(size),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(0.56 + Math.random() * 0.15, 0.5, 0.3),
+        transparent: true,
+        opacity: 0.2 + Math.random() * 0.3,
+        wireframe: true,
+      })
+    );
+    shape.position.set(
+      (Math.random() - 0.5) * 15,
+      (Math.random() - 0.5) * 15,
+      (Math.random() - 0.5) * 10 - 3
+    );
+    shape.userData = {
+      rotSpeed: 0.005 + Math.random() * 0.02,
+      floatSpeed: 0.001 + Math.random() * 0.003,
+      floatAmp: 0.1 + Math.random() * 0.3,
+      offset: Math.random() * Math.PI * 2,
+    };
+    shapesGroup.add(shape);
+  }
+  scene.add(shapesGroup);
+
+  camera.position.z = 8;
+
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Rotate particle system slowly
+    particleSystem.rotation.y += 0.0005;
+    linesGroup.rotation.y += 0.0005;
+    torus.rotation.x += 0.002;
+    torus.rotation.y += 0.003;
+
+    // Float shapes
+    const time = Date.now() * 0.001;
+    shapesGroup.children.forEach((shape) => {
+      shape.rotation.x += shape.userData.rotSpeed;
+      shape.rotation.y += shape.userData.rotSpeed * 0.7;
+      shape.position.y += Math.sin(time * shape.userData.floatSpeed + shape.userData.offset) * 0.001;
+    });
+
+    // Mouse parallax
+    const targetX = mouseX * 1.5;
+    const targetY = mouseY * 1.0;
+    particleSystem.position.x += (targetX * 0.3 - particleSystem.position.x) * 0.02;
+    particleSystem.position.y += (targetY * 0.3 - particleSystem.position.y) * 0.02;
+    linesGroup.position.x = particleSystem.position.x;
+    linesGroup.position.y = particleSystem.position.y;
+    shapesGroup.position.x = particleSystem.position.x * 0.5;
+    shapesGroup.position.y = particleSystem.position.y * 0.5;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+
+</body>
+</html>
