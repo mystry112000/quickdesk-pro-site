@@ -98,7 +98,6 @@
       color: #000;
       box-shadow: 0 0 40px rgba(34, 211, 165, 0.3);
       animation: pulse-glow 2s ease-in-out infinite;
-      transition: all 0.3s ease;
       position: relative;
     }
     .btn-dload::after {
@@ -172,7 +171,7 @@
       border: none;
     }
     .float-dload:hover {
-      transform: scale(1.08);
+      transform: scale(1.08) !important;
       box-shadow: 0 8px 50px rgba(34, 211, 165, 0.6);
     }
     @media (max-width: 600px) {
@@ -342,7 +341,6 @@
     }
 
 
-
     /* STATS */
     .stats {
       display: grid;
@@ -423,7 +421,6 @@
     @media (max-width: 600px) {
       section { padding: 4rem 1.2rem; }
       .hero-buttons { flex-direction: column; align-items: center; }
-      .btn { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -592,6 +589,9 @@
 
 <script>
   // ── THREE.JS 3D BACKGROUND ──────────────────────────────
+  if (typeof THREE === 'undefined') {
+    document.getElementById('canvas-container').style.display = 'none';
+  } else {
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -746,6 +746,7 @@
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
+  }
 </script>
 
 <a href="https://github.com/mystry112000/quickdesk-pro-site/releases/download/v1.0.0/QuickDesk-Pro-v4.zip" class="float-dload">⬇ Download</a>
